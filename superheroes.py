@@ -137,6 +137,7 @@ class Team:
             for hero in self.heroes:
                 dead = hero.take_damage(damage_per_hero)
                 if dead == 1:
+                    hero.deaths += 1
                     kills += 1
         return kills
 
@@ -147,7 +148,6 @@ class Team:
             for hero in self.heroes:
                 dead = hero.take_damage(damage_per_hero)
                 if dead == 1:
-                    hero.deaths += 1
                     deaths += 1
         return deaths
 
@@ -155,21 +155,120 @@ class Team:
         for hero in self.heroes:
             hero.health = hero.start_health
 
+    def check_heroes(self):
+        for hero in self.heroes:
+            if hero.health > 0:
+                return True
+        return False
+
     def stats(self):
         for hero in self.heroes:
-            print("{}: \n       kills: {}\n       deaths: {}".format(hero.name, hero.kills, hero.deaths))
+            print("{}: \n       kills: {}\n       deaths: {}".format(
+                hero.name, hero.kills, hero.deaths))
 
     def update_kills(self, kills):
         for hero in self.heroes:
             hero.add_kill(kills)
 
 
+class Arena:
+    team_one = None
+    team_two = None
+
+    def __init__(self):
+        self.team_one = None
+        self.team_two = None
+
+    def build_team_one(self):
+        name = user_input('Enter name for team 1: ')
+        self.team_one = Team(name)
+        add_heroes = True
+        hero_count = 1
+        while add_heroes:
+            print('enter \'quit\' to cancel')
+            name = user_input('Enter name for hero {}: '.format(hero_count))
+            if name == 'quit':
+                add_heroes = False
+                break
+            health = user_input(
+                'Enter health for {}: default(100) '.format(name))
+            if health == 'quit':
+                add_heroes = False
+                break
+
+            if health and int(health) > 0:
+                self.team_one.add_hero(Hero(name, health))
+            else:
+                self.team_one.add_hero(Hero(name))
+
+            hero_count += 1
+
+            print('Added {} to team 1.'.format(name))
+
+    def build_team_two(self):
+        name = user_input('Enter name for team 2: ')
+        self.team_two = Team(name)
+        add_heroes = True
+        hero_count = 1
+        while add_heroes:
+            print('enter \'quit\' to cancel')
+            name = user_input('Enter name for hero {}: '.format(hero_count))
+            if name == 'quit':
+                add_heroes = False
+                break
+            health = user_input(
+                'Enter health for {}: default(100) '.format(name))
+            if health == 'quit':
+                add_heroes = False
+                break
+
+            if health and int(health) > 0:
+                self.team_two.add_hero(Hero(name, health))
+            else:
+                self.team_two.add_hero(Hero(name))
+
+            hero_count += 1
+
+            print('Added {} to team 2.'.format(name))
+
+    def team_battle(self):
+        teams_alive = True
+        while teams_alive:
+            team_one_alive = self.team_one.check_heroes()
+            team_two_alive = self.team_two.check_heroes()
+
+            print('team one is alive: {}'.format(team_one_alive))
+            print('team two is alive: {}'.format(team_two_alive))
+
+            if team_one_alive and team_two_alive:
+                self.team_one.attack(self.team_two)
+                self.team_two.attack(self.team_one)
+            else:
+                teams_alive = False
+
+        self.show_stats()
+
+    def show_stats(self):
+        print('{} statistics:\n\n'.format(self.team_one.name))
+        self.team_one.stats()
+
+        print('__________________________________________________')
+
+        print('{} statistics:\n\n'.format(self.team_two.name))
+        self.team_one.stats()
+
+
+def user_input(prompt):
+    try:
+        user_input = input(prompt)
+        return user_input
+
+    except EOFError:
+        return ''
+
+
 if __name__ == "__main__":
-    hero = Hero("Wonder Woman")
-    print(hero.attack())
-    ability = Ability("Divine Speed", 300)
-    hero.add_ability(ability)
-    print(hero.attack())
-    new_ability = Ability("Super Human Strength", 800)
-    hero.add_ability(new_ability)
-    print(hero.attack())
+    arena = Arena()
+    arena.build_team_one()
+    arena.build_team_two()
+    arena.team_battle()
