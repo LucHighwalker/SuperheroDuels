@@ -1,9 +1,10 @@
 import random
-
+import os
 
 class Hero:
     name = ''
     abilities = list()
+    weapons = list()
     armors = list()
     start_health = 0
     health = 0
@@ -13,6 +14,7 @@ class Hero:
     def __init__(self, name, health=100):
         self.name = name
         self.abilities = list()
+        self.weapons = list()
         self.armors = list()
         self.start_health = int(health)
         self.health = int(health)
@@ -25,6 +27,9 @@ class Hero:
     def add_armor(self, armor):
         self.armors.append(armor)
 
+    def add_weapon(self, weapon):
+        self.weapons.append(weapon)
+
     def attack(self):
         attack_power = 0
 
@@ -33,6 +38,10 @@ class Hero:
 
         for ability in self.abilities:
             attack_power += ability.attack()
+
+        for weapon in self.weapons:
+            attack_power += weapon.attack()
+
         return attack_power
 
     def defend(self):
@@ -43,6 +52,7 @@ class Hero:
 
         for armor in self.armors:
             defense_power += armor.defend()
+
         return defense_power
 
     def take_damage(self, damage_amt):
@@ -180,6 +190,11 @@ class Arena:
         self.team_one = None
         self.team_two = None
 
+    def reset(self):
+        self.team_one.revive_heroes()
+        self.team_two.revive_heroes()
+        self.team_battle()
+
     def build_team(self, team):
         team_name = user_input('Enter name for team {}: '.format(team))
         team = Team(team_name)
@@ -187,7 +202,6 @@ class Arena:
         hero_count = 1
         
         while add_heroes:
-            print('enter \'quit\' to cancel')
             name = user_input('Enter name for hero {}: '.format(hero_count))
             health = user_input('Enter health for {}: default(100) '.format(name))
 
@@ -207,6 +221,20 @@ class Arena:
                 if add_another.lower() == 'n':
                     add_abilities = False
 
+            add_wp = user_input('Add weapons to {}? (y/n) '.format(name))
+            if add_wp.lower() == 'y':
+                add_weapons = True
+            elif add_wp.lower() == 'n':
+                add_weapons = False
+            while add_weapons:
+                wp_name = user_input('Enter name for weapon: ')
+                wp_power = user_input('Enter power for {}: '.format(wp_name))
+                weapon = Weapon(wp_name, wp_power)
+                hero.add_weapon(weapon)
+                add_another = user_input('Add another weapon to {}? (y/n) '.format(name))
+                if add_another.lower() == 'n':
+                    add_weapons = False
+
             add_ar = user_input('Add armor to {}? (y/n) '.format(name))
             if add_ar.lower() == 'y':
                 add_armor = True
@@ -220,20 +248,6 @@ class Arena:
                 add_another = user_input('Add more armor to {}? (y/n) '.format(name))
                 if add_another.lower() == 'n':
                     add_armor = False
-
-            # add_wp = user_input('Add weapons to {}? (y/n) '.format(name))
-            # if add_wp.lower() == 'y':
-            #     add_weapons = True
-            # elif add_wp.lower == 'n':
-            #     add_weapons = False
-            # while add_weapons:
-            #     wp_name = user_input('Enter name for weapon: ')
-            #     wp_power = user_input('Enter power for {}: '.format(wp_name))
-            #     weapon = Weapon(wp_name, wp_power)
-            #     hero.add_weapon(weapon)
-            #     add_another = user_input('Add another weapon to {}? (y/n) '.format(name))
-            #     if add_another.lower == 'n':
-            #         add_weapons = False
 
 
             team.add_hero(hero)
@@ -310,6 +324,10 @@ class Arena:
                 teams_alive = False
 
         self.show_stats()
+        print('\n\n')
+        reset = user_input('Run simulation again? (y/n): ')
+        if reset.lower() == 'y':
+            self.reset()
 
     def show_stats(self):
         print('{} statistics:\n\n'.format(self.team_one.name))
@@ -324,6 +342,7 @@ class Arena:
 def user_input(prompt):
     try:
         user_input = input(prompt)
+        os.system('cls' if os.name == 'nt' else 'clear')
         return user_input
 
     except EOFError:
